@@ -60,7 +60,7 @@ mod write_tests {
             });
             s.spawn(move || {
                 std::thread::sleep(time::Duration::from_secs(1));
-                assert_eq!(m2.write(|_| {}), false);
+                assert!(!m2.write(|_| {}));
             });
         });
     }
