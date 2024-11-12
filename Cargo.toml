@@ -2,6 +2,10 @@
 name = "movetex"
 version = "1.0.0"
 edition = "2021"
+description = "Non-blocking, atomic-based synchronization primitive allowing multiple readers and single writer for complex data structures without blocking readers."
+categories = ["data-structures", "memory-management"]
+keywords = ["atomic", "Arc"]
+license = "MIT"
 
 [dependencies]
 
