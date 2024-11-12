@@ -10,6 +10,10 @@ Movetex provides a non-blocking, atomic-based synchronization primitive in Rust,
    - For multithreaded scenarios, you can retry or pause.
    - In async contexts, yield the current green thread to improve efficiency.
 
+## Safety
+
+This library uses `unsafe` code to perform low-level atomic operations. Please make sure to use it only through the public API, which ensures memory safety.
+
 ## Example
 
 ```rust

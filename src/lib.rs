@@ -1,4 +1,4 @@
-//! # Movetex: Non-blocking Mutex Alternative for Complex Data
+//! # Movetex
 //!
 //! Movetex provides a non-blocking, atomic-based synchronization primitive in Rust, enabling multiple readers or a single writer to access complex data structures safely and efficiently. Unlike a standard `Mutex`, Movetex performs atomic pointer swaps, making it suitable for advanced scenarios where atomic operations are needed not only for basic types but also for complex data structures.
 //!
@@ -9,6 +9,9 @@
 //! - **Conditional Write Handling**: `write` returns a `bool` to indicate if the write lock was acquired, giving you control over what to do if a write isn’t immediately possible.
 //!   - For multithreaded scenarios, you can retry or pause.
 //!   - In async contexts, yield the current green thread to improve efficiency.
+//! ## Safety
+//! 
+//! This library uses `unsafe` code to perform low-level atomic operations. Please make sure to use it only through the public API, which ensures memory safety.
 //!
 //! ## Example
 //!
