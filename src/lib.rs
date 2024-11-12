@@ -131,18 +131,23 @@ impl<T: Clone> Movetex<T> {
     /// Returns `true` if the write succeeds, or `false` if another write is in progress.
     pub fn write(&self, f: impl FnOnce(&mut T)) -> bool {
         if !self.ptr_w.load(Ordering::Acquire).is_null() {
-            let mut value =
-                unsafe { *Box::from_raw(self.ptr_w.swap(ptr::null_mut(), Ordering::Release)) };
+            let ptr = self.ptr_w.swap(ptr::null_mut(), Ordering::Release);
 
+            if ptr.is_null() {
+                return false;
+            }
+
+            let mut value = unsafe { *Box::from_raw(ptr) };
+
+            // Применение функции к значению
             f(&mut value);
 
-            drop(unsafe {
-                Box::from_raw(
-                    self.ptr_r
-                        .swap(Box::into_raw(Box::new(value.clone())), Ordering::Release),
-                )
-            });
+            // Обновляем ptr_r, проверяя значение перед `Box::from_raw`
+            let new_ptr_r = Box::into_raw(Box::new(value.clone()));
 
+            drop(unsafe { Box::from_raw(self.ptr_r.swap(new_ptr_r, Ordering::Release)) });
+
+            // Восстанавливаем ptr_w
             self.ptr_w
                 .store(Box::into_raw(Box::new(value)), Ordering::Release);
 
