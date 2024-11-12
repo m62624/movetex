@@ -81,7 +81,9 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 /// detailed documentation.
 
 pub struct Movetex<T: Clone> {
+    // Atomic pointer for reading
     ptr_r: AtomicPtr<T>,
+    // Atomic pointer for writing
     ptr_w: AtomicPtr<T>,
 }
 
@@ -146,6 +148,17 @@ impl<T: Clone> Movetex<T> {
         false
     }
 
+    /// The `swap` method atomically replaces the value stored in `ptr_w` without cloning.
+    /// This operation allows for multiple threads to simultaneously replace the value without any copying overhead, as long as there is no ongoing `write` operation.
+    ///
+    /// ---
+    /// ⚠️ It's important to note that `swap` only updates the writer (`ptr_w`) and does not affect the reader (`ptr_r`).
+    /// This means that while the writer's value can be swapped atomically, the reader will continue to see the old value
+    /// until a `write` operation occurs, which is the only operation that can update both the writer and reader values.
+    ///
+    /// If a `write` operation is in progress, the `swap` will return `None`, signaling that the operation could not be performed at that time.
+    ///
+    /// Returns `Some(old_value)` if the swap was successful, or `None` if a `write` operation was in progress.
     pub fn swap(&self, value: T) -> Option<T> {
         let ptr = self
             .ptr_w
@@ -157,6 +170,7 @@ impl<T: Clone> Movetex<T> {
     }
 }
 
+/// Implement `Drop` for `Movetex` to ensure that the internal pointers are correctly deallocated.
 impl<T: Clone> Drop for Movetex<T> {
     fn drop(&mut self) {
         unsafe {
