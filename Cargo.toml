@@ -7,3 +7,9 @@ edition = "2021"
 
 
 [dev-dependencies]
+criterion = "0.5.1"
+rand = "0.8.5"
+
+[[bench]]
+name = "rw"
+harness = false
