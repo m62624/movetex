@@ -10,7 +10,7 @@
 //!   - For multithreaded scenarios, you can retry or pause.
 //!   - In async contexts, yield the current green thread to improve efficiency.
 //! ## Safety
-//! 
+//!
 //! This library uses `unsafe` code to perform low-level atomic operations. Please make sure to use it only through the public API, which ensures memory safety.
 //!
 //! ## Example
@@ -175,13 +175,14 @@ impl<T: Clone> Movetex<T> {
 
 /// Implement `Drop` for `Movetex` to ensure that the internal pointers are correctly deallocated.
 impl<T: Clone> Drop for Movetex<T> {
+    /// Ensures that the internal pointers are correctly deallocated.
     fn drop(&mut self) {
         unsafe {
-            let ptr_r = self.ptr_r.load(Ordering::Acquire);
+            let ptr_r = self.ptr_r.load(Ordering::Relaxed);
             if !ptr_r.is_null() {
                 drop(Box::from_raw(ptr_r));
             }
-            let ptr_w = self.ptr_w.load(Ordering::Acquire);
+            let ptr_w = self.ptr_w.load(Ordering::Relaxed);
             if !ptr_w.is_null() {
                 drop(Box::from_raw(ptr_w));
             }
