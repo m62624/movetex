@@ -20,21 +20,48 @@ impl<T: Clone> Movetex<T> {
 
     pub fn write(&self, f: impl FnOnce(&mut T)) -> bool {
         if !self.ptr_w.load(Ordering::Acquire).is_null() {
-            let value = self.ptr_w.swap(ptr::null_mut(), Ordering::Release);
+            let mut value =
+                unsafe { *Box::from_raw(self.ptr_w.swap(ptr::null_mut(), Ordering::Release)) };
 
-            f(unsafe { &mut *value });
+            f(&mut value);
 
-            self.ptr_r.store(value.clone(), Ordering::Release);
+            drop(unsafe {
+                Box::from_raw(
+                    self.ptr_r
+                        .swap(Box::into_raw(Box::new(value.clone())), Ordering::Release),
+                )
+            });
 
-            let old_ptr_w = self.ptr_w.swap(value, Ordering::Release);
+            self.ptr_w
+                .store(Box::into_raw(Box::new(value)), Ordering::Release);
 
-            if !old_ptr_w.is_null() {
-                unsafe {
-                    drop(Box::from_raw(old_ptr_w));
-                }
-            }
             return true;
         }
         false
+    }
+
+    pub fn swap(&self, value: T) -> Option<T> {
+        let ptr = self
+            .ptr_w
+            .swap(Box::into_raw(Box::new(value)), Ordering::Release);
+        if ptr.is_null() {
+            return None;
+        }
+        Some(unsafe { *Box::from_raw(ptr) })
+    }
+}
+
+impl<T: Clone> Drop for Movetex<T> {
+    fn drop(&mut self) {
+        unsafe {
+            let ptr_r = self.ptr_r.load(Ordering::Acquire);
+            if !ptr_r.is_null() {
+                drop(Box::from_raw(ptr_r));
+            }
+            let ptr_w = self.ptr_w.load(Ordering::Acquire);
+            if !ptr_w.is_null() {
+                drop(Box::from_raw(ptr_w));
+            }
+        }
     }
 }
