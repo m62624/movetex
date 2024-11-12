@@ -121,6 +121,7 @@ mod swap_tests {
             });
 
             s.spawn(move || {
+                std::thread::sleep(time::Duration::from_secs(1));
                 assert_eq!(m2.swap(44), Some(43));
             });
         });
