@@ -2,6 +2,7 @@ use movetex::Movetex;
 use std::sync::Arc;
 use std::time;
 
+#[cfg(test)]
 mod read_tests {
     use super::*;
 
